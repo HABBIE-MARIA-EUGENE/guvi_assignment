@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="form-container">
+        <h2>Profile</h2>
+        <form id="updateForm">
+            <label>Username</label><br>
+            <input type="text" id="username" readonly><br>
+
+            <label>Email</label><br>
+            <input type="email" id="email" readonly><br>
+
+            <label>Age</label><br>
+            <input type="number" id="age"><br>
+
+            <label>Date of Birth</label><br>
+            <input type="date" id="dob"><br>
+
+            <label>Contact</label><br>
+            <input type="text" id="contact"><br>
+
+            <button type="submit">Update Profile</button>
+        </form>
+        <p><a href="#" onclick="logout()">Logout</a></p>
+    </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", async function () {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("Please login again");
+            window.location.href = "/login";
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/profile", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                document.getElementById("username").value = data.username || "";
+                document.getElementById("email").value = data.email || "";
+                document.getElementById("age").value = data.age || "";
+                document.getElementById("dob").value = data.dob || "";
+                document.getElementById("contact").value = data.contact || "";
+            } else {
+                alert(data.error || "Session expired");
+                window.location.href = "/login";
+            }
+        } catch (err) {
+            console.error("Error loading profile:", err);
+            alert("Network error");
+        }
+    });
+
+    document.getElementById("updateForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const token = localStorage.getItem("token");
+        const age = document.getElementById("age").value;
+        const dob = document.getElementById("dob").value;
+        const contact = document.getElementById("contact").value;
+
+        try {
+            const response = await fetch("/api/update_profile", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token, age, dob, contact }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert("Profile updated successfully");
+            } else {
+                alert(data.error || "Failed to update");
+            }
+        } catch (err) {
+            console.error("Update failed:", err);
+            alert("Network error while updating");
+        }
+    });
+
+    function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+    }
+    </script>
+</body>
+</html>
